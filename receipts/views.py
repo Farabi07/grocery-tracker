@@ -5,8 +5,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from .models import Receipt, Transaction, ExpenseCategory
 from django.conf import settings  # To get the OCR service URL from settings
+from rest_framework.permissions import IsAuthenticated
+from accounts.permissions import IsEmployee  # Assuming you have a custom permission for employees
+from django.utils import timezone
 
 class ReceiptScanView(APIView):
+    permission_classes = [IsAuthenticated, IsEmployee]
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request):
