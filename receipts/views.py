@@ -9,50 +9,103 @@ from rest_framework.permissions import IsAuthenticated
 from accounts.permissions import IsEmployee  # Assuming you have a custom permission for employees
 from django.utils import timezone
 
+# class ReceiptScanView(APIView):
+#     permission_classes = [IsAuthenticated, IsEmployee]
+#     parser_classes = (MultiPartParser, FormParser)
+
+#     def post(self, request):
+#         # Receive the uploaded receipt image
+#         file = request.FILES['receipt']
+
+#         # Prepare the file for sending to the AI OCR service
+#         files = {'receipt': file}
+
+#         # The URL of the OCR service (use a demo API for this purpose)
+#         ocr_service_url = settings.OCR_SERVICE_URL  # Use an environment variable or settings for the URL
+
+#         # Send the image to the OCR service
+#         response = requests.post(ocr_service_url, files=files)
+
+#         if response.status_code == 200:
+#             # The AI service returned structured data (example JSON structure)
+#             ocr_data = response.json()
+
+#             if ocr_data['status'] == 'success':
+#                 # Process the returned items from OCR
+#                 for item in ocr_data['items']:
+#                     category_name = item.get('category', 'Unknown')
+#                     price = item.get('price', 0.0)
+#                     item_name = item.get('name', 'Unknown')
+
+#                     # Find or create the category
+#                     category, created = ExpenseCategory.objects.get_or_create(name=category_name)
+
+#                     # Create the receipt entry in the database
+#                     receipt = Receipt.objects.create(user=request.user, image=file, total_amount=price)
+
+#                     # Create the transaction entry for the item
+#                     Transaction.objects.create(
+#                         receipt=receipt,
+#                         category=category,
+#                         item_name=item_name,
+#                         price=price
+#                     )
+
+#                 return Response({"message": "Receipt processed successfully"}, status=status.HTTP_201_CREATED)
+#             else:
+#                 return Response({"message": "Error processing receipt"}, status=status.HTTP_400_BAD_REQUEST)
+#         else:
+#             return Response({"message": "Error connecting to OCR service"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# Mocked OCR response (simulate a successful OCR processing)
+mocked_ocr_response = {
+    "status": "success",
+    "items": [
+        {
+            "name": "Milk",
+            "category": "Dairy",
+            "price": 2.50
+        },
+        {
+            "name": "Chicken",
+            "category": "Meat",
+            "price": 5.00
+        }
+    ]
+}
+
 class ReceiptScanView(APIView):
-    permission_classes = [IsAuthenticated, IsEmployee]
     parser_classes = (MultiPartParser, FormParser)
 
     def post(self, request):
-        # Receive the uploaded receipt image
+        # Mock receipt image upload
         file = request.FILES['receipt']
 
-        # Prepare the file for sending to the AI OCR service
-        files = {'receipt': file}
+        # Simulate OCR processing using the mocked response
+        ocr_data = mocked_ocr_response
 
-        # The URL of the OCR service (use a demo API for this purpose)
-        ocr_service_url = settings.OCR_SERVICE_URL  # Use an environment variable or settings for the URL
+        if ocr_data['status'] == 'success':
+            # Process the returned items from OCR (mocked response)
+            for item in ocr_data['items']:
+                category_name = item.get('category', 'Unknown')
+                price = item.get('price', 0.0)
+                item_name = item.get('name', 'Unknown')
 
-        # Send the image to the OCR service
-        response = requests.post(ocr_service_url, files=files)
+                # Find or create the category
+                category, created = ExpenseCategory.objects.get_or_create(name=category_name)
 
-        if response.status_code == 200:
-            # The AI service returned structured data (example JSON structure)
-            ocr_data = response.json()
+                # Create the receipt entry in the database
+                receipt = Receipt.objects.create(user=request.user, image=file, total_amount=price)
 
-            if ocr_data['status'] == 'success':
-                # Process the returned items from OCR
-                for item in ocr_data['items']:
-                    category_name = item.get('category', 'Unknown')
-                    price = item.get('price', 0.0)
-                    item_name = item.get('name', 'Unknown')
+                # Create the transaction entry for the item
+                Transaction.objects.create(
+                    receipt=receipt,
+                    category=category,
+                    item_name=item_name,
+                    price=price
+                )
 
-                    # Find or create the category
-                    category, created = ExpenseCategory.objects.get_or_create(name=category_name)
-
-                    # Create the receipt entry in the database
-                    receipt = Receipt.objects.create(user=request.user, image=file, total_amount=price)
-
-                    # Create the transaction entry for the item
-                    Transaction.objects.create(
-                        receipt=receipt,
-                        category=category,
-                        item_name=item_name,
-                        price=price
-                    )
-
-                return Response({"message": "Receipt processed successfully"}, status=status.HTTP_201_CREATED)
-            else:
-                return Response({"message": "Error processing receipt"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Receipt processed successfully"}, status=status.HTTP_201_CREATED)
         else:
-            return Response({"message": "Error connecting to OCR service"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"message": "Error processing receipt"}, status=status.HTTP_400_BAD_REQUEST)
