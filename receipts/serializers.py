@@ -1,5 +1,4 @@
 from rest_framework import serializers
-<<<<<<< HEAD
 from .models import Receipt, Transaction
 from django_currentuser.middleware import (get_current_authenticated_user, get_current_user)
 
